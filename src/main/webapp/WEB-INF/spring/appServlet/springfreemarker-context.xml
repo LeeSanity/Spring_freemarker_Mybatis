@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    				http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     				http://www.springframework.org/schema/context 
+     				http://www.springframework.org/schema/context/spring-context-3.0.xsd
+     				http://www.springframework.org/schema/util
+     				http://www.springframework.org/schema/util/spring-util.xsd
+     				http://www.springframework.org/schema/mvc 
+     				http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+     				
+
+	<!-- interceptors does not work-->
+	<bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">  
+    	<property name="interceptors">  
+        	<list>  
+           		<ref bean="loginInterceptor"/>
+        	</list>  
+   		</property>  
+	</bean>
+	<bean id = "loginInterceptor" 
+		class = "com.test.interceptor.LoginInterceptor" />
+		
+	<!-- interceptor work here -->
+	<mvc:interceptors>
+      <bean class="com.test.interceptor.LoginInterceptor" />
+	</mvc:interceptors>
+	
+	<!-- freemarker config -->
+	<bean id="freemarkerConfig"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPaths">
+			<list>
+				<value>/WEB-INF/views</value>
+				<!-- <value>classpath:/mainsite_comm/</value> -->
+			</list>
+		</property>
+		<property name="freemarkerVariables">  
+        	<map>  
+            	<entry key="hashKeyConvert" value-ref="hashKeyConvert" />
+            	<entry key="indexOf" value-ref="indexOfMethod" />
+            </map>
+		</property>
+	</bean>
+
+	<!-- View resolvers -->
+	<bean id="viewResolver"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+		<property name="cache" value="true" />
+		<property name="order" value="1" />
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.freemarker.FreeMarkerView" />
+		<property name="viewNames">
+			<array>
+				<value>*.ftl</value>
+			</array>
+		</property>
+		<property name="requestContextAttribute" value="request" />
+		<property name="exposeSpringMacroHelpers" value="true" />
+		<property name="exposeRequestAttributes" value="true" />
+		<property name="exposeSessionAttributes" value="true" />
+		<property name="allowSessionOverride" value="true" />
+		<property name="allowRequestOverride" value="true" />
+		<property name="contentType" value="text/html;charset=utf-8" /><!--编码 -->
+	</bean>
+
+	<!-- UrlBasedViewResolver to Handle Redirects & Forward -->
+	<bean id="urlViewResolver"
+		class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.freemarker.FreeMarkerView" />
+		<property name="order" value="2" />
+	</bean>
+
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8" />
+		<property name="maxUploadSize" value="10485760000" />
+		<property name="maxInMemorySize" value="40960" />
+	</bean>
+
+	<mvc:annotation-driven validator="validator" />
+	<bean id="validator"
+		class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+		<property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+		<!--不设置则默认为classpath下的 ValidationMessages.properties -->
+	</bean>
+	<bean id="conversion-service"
+		class="org.springframework.format.support.FormattingConversionServiceFactoryBean" />
+
+	<context:component-scan base-package="com.test.controller" />
+	<context:component-scan base-package="com.test.freemarker" />
+	<context:component-scan base-package="com.test.mapper" />
+	<context:component-scan base-package="com.test.service" />
+	
+	<!--mybatis 数据库配置 -->
+    <util:properties id="dbConfig" location="classpath:/config/jdbc.properties"></util:properties>
+    
+    
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" lazy-init="default"
+                autowire="default">
+        <property name="driverClassName" value="#{dbConfig['read.driver']}"></property>
+        <property name="url" value="#{dbConfig['read.url']}"></property>
+        <property name="username" value="#{dbConfig['read.user']}"></property>
+        <property name="password" value="#{dbConfig['read.password']}"></property>
+        <property name="maxActive" value="#{dbConfig['read.maxActive']}"></property>
+        <property name="maxIdle" value="#{dbConfig['read.maxIdle']}"></property>
+        <property name="maxWait" value="#{dbConfig['read.maxWait']}"></property>
+        <property name="timeBetweenEvictionRunsMillis"
+                        value="#{dbConfig['read.timeBetweenEvictionRunsMillis']}"></property>
+        <property name="testWhileIdle" value="#{dbConfig['read.testWhileIdle']}"></property>
+        <property name="validationQuery">
+            <value>select 1 from DUAL</value>
+        </property>
+        <property name="removeAbandoned" value="#{dbConfig['read.removeAbandoned']}"></property>
+        <property name="removeAbandonedTimeout"
+                        value="#{dbConfig['read.removeAbandonedTimeout']}"></property>
+    </bean>
+  
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="classpath:/config/mybatis-config.xml" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+    
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+    	<constructor-arg ref="sqlSessionFactory"></constructor-arg>
+    </bean>
+    
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.test.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+    </bean>
+</beans>
