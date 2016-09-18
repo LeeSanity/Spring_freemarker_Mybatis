@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.test.mapper.SQLMapper">
+	
+    <select id="getAllItems"  resultType="Item">
+		select * from products ;
+    </select>
+    
+    <select id="getSingleItem" resultType="Item" parameterType="int">
+    	select * from products where id = #{id}
+    </select>
+    
+    <insert id="save" parameterType="Item" useGeneratedKeys="true" keyProperty="id">
+    	insert into products (proName, proDesc, phoneNum, email)
+    	values (#{proName}, #{proDesc}, #{phoneNum}, #{email})
+    </insert>
+    
+    <update id="saveChange" parameterType="Item">
+    	update products set
+    		proName = '${proName}',
+    		proDesc = '${proDesc}',
+    		phoneNum = '${phoneNum}',
+    		email = '${email}'
+    	where id = ${id}
+    </update>
+    
+    <update id = "delete" parameterType="int">
+    	update products set
+    		deleted = 1
+    	where id = #{id}
+    </update>
+</mapper>

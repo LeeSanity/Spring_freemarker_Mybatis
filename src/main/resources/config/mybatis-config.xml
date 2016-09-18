@@ -23,7 +23,7 @@
         <typeAlias alias="Item" type="com.test.domain.Item"/>
     </typeAliases>
     <mappers>
-        <mapper resource="mapper/test.xml"/>
+        <mapper resource="mapper/sqlService.xml"/>
     </mappers>
 
 </configuration>

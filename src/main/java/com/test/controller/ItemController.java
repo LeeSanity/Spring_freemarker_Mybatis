@@ -34,7 +34,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import com.test.domain.Item;
 import com.test.domain.User;
-import com.test.service.TestService;
+import com.test.service.SQLService;
 
 @Controller
 public class ItemController {
@@ -42,7 +42,7 @@ public class ItemController {
 	private User user = new User();
 	
 	@Autowired
-	private TestService service;
+	private SQLService service;
 	
 	@Autowired
 	public ItemController(ItemRepository itemRepo){
@@ -89,14 +89,15 @@ public class ItemController {
 	@RequestMapping(value = "/addItem", method = RequestMethod.POST)
 	public ModelAndView addItem(@RequestBody String body,
 			@Valid Item item, BindingResult bindingResult){
-		System.out.println("body" + body);
+//		System.out.println("body" + body);
 		ModelAndView view = new ModelAndView("newIndex.ftl");
 		boolean hasError = bindingResult.hasErrors();
 		if (hasError) {
 			view.addObject("problem", item);
 	        return view;  
 	    } 
-		itemRepo.save(item);
+//		itemRepo.save(item);
+		service.save(item);
 		view.setView(new RedirectView("/newIndex", false));
 		return view;
 	}
@@ -104,7 +105,8 @@ public class ItemController {
 	@RequestMapping(value = "/creat", method = RequestMethod.GET)
 	public ModelAndView creatItem(@Valid @ModelAttribute("item")Item item, BindingResult bindingResult){
 		ModelAndView view;
-		itemRepo.save(item);
+//		itemRepo.save(item);
+		service.save(item);
 		if (bindingResult.hasErrors()) {
 			view = new ModelAndView("changeItem.ftl");
 			view.addObject("problem", item);
@@ -113,7 +115,8 @@ public class ItemController {
 	    }
 		else{
 			view = new ModelAndView("newIndex.ftl");
-			itemRepo.save(item);
+//			itemRepo.save(item);
+			service.save(item);
 			view.setView(new RedirectView("/newIndex", false));
 			return view;
 		}
@@ -122,15 +125,17 @@ public class ItemController {
 	@RequestMapping(value = "/deleteItem/{id}", method = RequestMethod.GET)
 	public ModelAndView deleteItem(@PathVariable("id") int id){
 		ModelAndView view = new ModelAndView("redirect:/newIndex");
-		itemRepo.delete(id);
+//		itemRepo.delete(id);
 //		view.setView(new RedirectView("/newIndex", false));
+		service.delete(id);
 		return view;
 	}
 	
 	@RequestMapping(value = "/changeItem/{id}", method = RequestMethod.GET)
 	public ModelAndView changeItem(@PathVariable("id") int id){
 		ModelAndView view = new ModelAndView("changeItem.ftl");
-		Item item_temp = itemRepo.getItem(id);
+//		Item item_temp = itemRepo.getItem(id);
+		Item item_temp = service.getSingleItem(id);
 		view.addObject("changeItem",item_temp);
 		return view;
 	}
@@ -138,7 +143,8 @@ public class ItemController {
 	@RequestMapping(value = "/changeItem/{id}/save", method = RequestMethod.POST)
 	public ModelAndView saveItem(@PathVariable("id") int id, @ModelAttribute("item") Item item){
 		ModelAndView view = new ModelAndView("newIndex.ftl");
-		itemRepo.saveChange(item);
+//		itemRepo.saveChange(item);
+		service.saveChange(item);
 		view.setView(new RedirectView("/newIndex", false));
 		return view;
 	}
